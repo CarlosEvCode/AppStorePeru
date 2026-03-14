@@ -19,6 +19,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import com.example.appstoreperu.entidades.Marca;
@@ -38,6 +39,7 @@ public class Registrar extends AppCompatActivity {
     RequestQueue requestQueue;
 
     private final String URL_MARCAS = "http://192.168.18.61:3000/marcas";
+    private final String URL_PRODUCTOS = "http://192.168.18.61:3000/productos";
 
     private void loadUI() {
         spMarca = findViewById(R.id.spMarca);
@@ -55,12 +57,13 @@ public class Registrar extends AppCompatActivity {
         setContentView(R.layout.activity_registrar);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
         loadUI();
         obtenerMarcas(); // Cargar el Spinner al entrar en la pantalla
+
+        btnRegistrarProducto.setOnClickListener(v -> registrarProducto());
     }
 
     // Obtener las marcas desde la API
@@ -103,7 +106,7 @@ public class Registrar extends AppCompatActivity {
                 listaMarcas.add(marcaObj);
             }
 
-            // Pasar objetos al adaptador... El Spinner usará toString() para mostra nombres en la vista
+            // Pasar objetos al adaptador... El Spinner usará toString() para mostrar nombres en la vista
             ArrayAdapter<Marca> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, listaMarcas);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spMarca.setAdapter(adapter);
@@ -111,5 +114,54 @@ public class Registrar extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("ErrorJSON_Marcas", e.toString());
         }
+    }
+
+    // Registrar nuevo producto (POST)
+    private void registrarProducto() {
+        //Obtener la marca escogida en el Spinner
+        Marca marcaSeleccionada = (Marca) spMarca.getSelectedItem();
+        if (marcaSeleccionada == null) {
+            Toast.makeText(this, "Debe seleccionar una marca primero", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        JSONObject datosAEnviar = new JSONObject();
+        try {
+            datosAEnviar.put("id_marca", marcaSeleccionada.getId()); // Traemos el id de la marca
+            datosAEnviar.put("descripcion", edtDescripcion.getText().toString());
+            datosAEnviar.put("precio", Double.parseDouble(edtPrecio.getText().toString()));
+            datosAEnviar.put("stock", Integer.parseInt(edtStock.getText().toString()));
+            datosAEnviar.put("garantia", Integer.parseInt(edtGarantia.getText().toString()));
+        } catch (Exception e) {
+            Toast.makeText(this, "Complete los campos correctamente", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //Hacer la solicitud POST con Volley
+        JsonObjectRequest postRequest = new JsonObjectRequest(
+                Request.Method.POST,
+                URL_PRODUCTOS,
+                datosAEnviar,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(getApplicationContext(), "Producto registrado con éxito", Toast.LENGTH_SHORT).show();
+                        // Limpiar campos
+                        edtDescripcion.setText("");
+                        edtPrecio.setText("");
+                        edtStock.setText("");
+                        edtGarantia.setText("");
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("ErrorVolleyPOST", error.toString());
+                        Toast.makeText(getApplicationContext(), "Error al registrar el producto", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        requestQueue.add(postRequest);
     }
 }
