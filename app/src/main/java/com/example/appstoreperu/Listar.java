@@ -29,7 +29,7 @@ public class Listar extends AppCompatActivity {
     ListView lstProductos;
     RequestQueue requestQueue;
 
-    private final String URL = "http://192.168.18.61/productos";
+    private final String URL = "http://192.168.18.61:3000/productos";
 
     private void loadUI() {
         lstProductos = findViewById(R.id.lstProductos);
