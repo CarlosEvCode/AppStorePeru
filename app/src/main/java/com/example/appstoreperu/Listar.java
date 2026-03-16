@@ -2,6 +2,8 @@ package com.example.appstoreperu;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -93,6 +95,19 @@ public class Listar extends AppCompatActivity {
 
             adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, listaProductos);
             lstProductos.setAdapter(adapter);
+
+            // Clic en la lista para obtener el ID usando el mismo JSON recibido
+            lstProductos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    try {
+                        int idProducto = jsonProductos.getJSONObject(position).getInt("id");
+                        Toast.makeText(Listar.this, "ID del Registro seleccionado: " + idProducto, Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e("ErrorClick", e.toString());
+                    }
+                }
+            });
 
         } catch (Exception e) {
             Log.e("ErrorJSON", e.toString());
